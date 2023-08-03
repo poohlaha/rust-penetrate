@@ -1,0 +1,8 @@
+target
+pkg
+Cargo.lock
+output.txt
+.idea
+.DS_Store
+conf.ini
+
