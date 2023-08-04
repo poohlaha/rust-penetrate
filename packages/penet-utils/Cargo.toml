@@ -1,5 +1,5 @@
 [package]
-name = "penet-server"
+name = "penet-utils"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,5 @@ edition = "2021"
 
 [dependencies]
 colored = { workspace = true }
-actix-web = { workspace = true }
-actix-cors = { workspace = true }
-env_logger = { workspace = true }
-penet-utils = { path = "../penet-utils"}
+rust-ini = { workspace = true }
+lazy_static = { workspace = true }
