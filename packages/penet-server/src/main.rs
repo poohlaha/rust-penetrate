@@ -8,7 +8,6 @@ use actix_web::{web, App, HttpServer, HttpRequest, HttpResponse, middleware};
 use colored::*;
 use std::io::Result;
 use std::process::exit;
-use std::sync::{Arc, Mutex};
 use penet_utils::config::Config;
 use interceptor::Interceptor;
 
@@ -28,31 +27,6 @@ async fn request(req: HttpRequest, mut payload: web::Payload, method: Method) ->
     Ok(HttpResponse::NotFound().finish())
 }
 
-/// 获取 path 列表
-fn get_path_list(list: &Vec<String>) -> Vec<String> {
-    // list 为空, 就拦截所有请求
-    let mut services: Vec<String> = Vec::new();
-    if list.is_empty() {
-        services.push(String::from("/"));
-        return services;
-    }
-
-    for l in list.iter() {
-        let mut path = l.trim().clone().to_string();
-        if path.ends_with("*") {
-            path = path.trim_end_matches('*').to_string();
-        }
-
-        if path.ends_with("/") {
-            path = path.trim_end_matches('/').to_string();
-        }
-
-        services.push(path);
-    }
-
-    return services;
-}
-
 #[actix_web::main]
 async fn main() -> Result<()> {
     let config = Config::new();
@@ -61,7 +35,6 @@ async fn main() -> Result<()> {
     let interceptor = instance.interceptor.clone();
     let host = server.host.as_str();
     let port = server.port;
-    let paths = &interceptor.paths;
 
     println!("{} server port: {}", LOGGER_PREFIX.cyan().bold(), port.to_string().magenta().bold());
 
@@ -70,6 +43,7 @@ async fn main() -> Result<()> {
 
     let mut web_interceptor = Interceptor::new();
     web_interceptor.get_path(&interceptor.paths);
+    let list = web_interceptor.get_list();
 
     HttpServer::new(move || {
         let mut app =  App::new()
@@ -86,10 +60,8 @@ async fn main() -> Result<()> {
             .wrap(middleware::Compress::default())
             .wrap(Logger::default());
 
-        let paths = get_path_list(&web_interceptor.list);
-
-        if !paths.is_empty() {
-            for path in paths.iter() {
+        if !list.is_empty() {
+            for path in list.iter() {
                 app = app.service(web::scope(path).default_service(web::to(request)));
             }
         }
