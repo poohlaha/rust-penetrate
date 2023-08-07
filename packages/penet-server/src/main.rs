@@ -1,4 +1,4 @@
-//! 服务端, socket 推送
+//! 服务端拦截请求
 
 use std::error::Error;
 use actix_cors::Cors;
@@ -15,8 +15,10 @@ mod interceptor;
 
 const LOGGER_PREFIX: &str = "[Rust Penetrate Server]: ";
 
-async fn request(req: HttpRequest, mut payload: web::Payload, method: Method) -> Result<HttpResponse> {
+async fn request(req: HttpRequest, method: Method, body: String) -> Result<HttpResponse> {
     println!("request ....");
+    println!("method {:#?}", method);
+    println!("body {:#?}", body);
     let path = req
         .uri()
         .path()
@@ -24,7 +26,7 @@ async fn request(req: HttpRequest, mut payload: web::Payload, method: Method) ->
         .unwrap_or(req.uri().path());
 
     println!("uri: {}", path);
-    Ok(HttpResponse::NotFound().finish())
+    Ok(HttpResponse::MethodNotAllowed().finish())
 }
 
 #[actix_web::main]
